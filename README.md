@@ -1,6 +1,15 @@
+# NOTA
+
+Esse repositório pertence a https://github.com/chrishubert/whatsapp-api, implemeto features bem diferenciadas que atribuo como ✨especiais✨ e por isso não criei um fork.
+
+Coisas como
+
+- Pesquisar grupos brasileiros por tipos ✅
+- Entrar em um grupo pelo link dele ✅
+
 # WhatsApp REST API
 
-REST API wrapper for the [whatsapp-web.js](https://github.com/pedroslopez/whatsapp-web.js) library, providing an easy-to-use interface to interact with the WhatsApp Web platform. 
+REST API wrapper for the [whatsapp-web.js](https://github.com/pedroslopez/whatsapp-web.js) library, providing an easy-to-use interface to interact with the WhatsApp Web platform.
 It is designed to be used as a docker container, scalable, secure, and easy to integrate with other non-NodeJs projects.
 
 This project is a work in progress: star it, create issues, features or pull requests ❣️
@@ -43,6 +52,7 @@ cd whatsapp-api
 ```bash
 docker-compose pull && docker-compose up
 ```
+
 4. Visit http://localhost:3000/session/start/ABCD
 
 5. Scan the QR on your console using WhatsApp mobile app -> Linked Device -> Link a Device (it may take time to setup the session)
@@ -57,34 +67,34 @@ docker-compose pull && docker-compose up
 
 1. API and Callbacks
 
-| Actions                      | Status | Sessions                                | Status | Callbacks                                      | Status |
-| ----------------------------| ------| ----------------------------------------| ------| ----------------------------------------------| ------|
-| Send Image Message           | ✅     | Initiate session                       | ✅    | Callback QR code                               | ✅     |
-| Send Video Message           | ✅     | Terminate session                      | ✅    | Callback new message                           | ✅     |
-| Send Audio Message           | ✅     | Terminate inactive sessions            | ✅    | Callback status change                         | ✅     |
-| Send Document Message        | ✅     | Terminate all sessions                 | ✅    | Callback message media attachment              | ✅     |
-| Send File URL                | ✅     | Healthcheck                            | ✅    |                                                |        |
-| Send Button Message          | ✅     | Local test callback                    |        |                                                |        |
-| Send Contact Message         | ✅     |                                        |        |                                                |        |
-| Send List Message            | ✅     |                                        |        |                                                |        |
-| Set Status                   | ✅     |                                        |        |                                                |        |
-| Send Button With Media       | ✅     |                                        |        |                                                |        |
-| Is On Whatsapp?              | ✅     |                                        |        |                                                |        |
-| Download Profile Pic         | ✅     |                                        |        |                                                |        |
-| User Status                  | ✅     |                                        |        |                                                |        |
-| Block/Unblock User           | ✅     |                                        |        |                                                |        |
-| Update Profile Picture       | ✅     |                                        |        |                                                |        |
-| Create Group                 | ✅     |                                        |        |                                                |        |
-| Leave Group                  | ✅     |                                        |        |                                                |        |
-| All Groups                   | ✅     |                                        |        |                                                |        |
-| Invite User                  | ✅     |                                        |        |                                                |        |
-| Make Admin                   | ✅     |                                        |        |                                                |        |
-| Demote Admin                 | ✅     |                                        |        |                                                |        |
-| Group Invite Code            | ✅     |                                        |        |                                                |        |
-| Update Group Participants    | ✅     |                                        |        |                                                |        |
-| Update Group Setting         | ✅     |                                        |        |                                                |        |
-| Update Group Subject         | ✅     |                                        |        |                                                |        |
-| Update Group Description     | ✅     |                                        |        |                                                |        |
+| Actions                   | Status | Sessions                    | Status | Callbacks                         | Status |
+| ------------------------- | ------ | --------------------------- | ------ | --------------------------------- | ------ |
+| Send Image Message        | ✅     | Initiate session            | ✅     | Callback QR code                  | ✅     |
+| Send Video Message        | ✅     | Terminate session           | ✅     | Callback new message              | ✅     |
+| Send Audio Message        | ✅     | Terminate inactive sessions | ✅     | Callback status change            | ✅     |
+| Send Document Message     | ✅     | Terminate all sessions      | ✅     | Callback message media attachment | ✅     |
+| Send File URL             | ✅     | Healthcheck                 | ✅     |                                   |        |
+| Send Button Message       | ✅     | Local test callback         |        |                                   |        |
+| Send Contact Message      | ✅     |                             |        |                                   |        |
+| Send List Message         | ✅     |                             |        |                                   |        |
+| Set Status                | ✅     |                             |        |                                   |        |
+| Send Button With Media    | ✅     |                             |        |                                   |        |
+| Is On Whatsapp?           | ✅     |                             |        |                                   |        |
+| Download Profile Pic      | ✅     |                             |        |                                   |        |
+| User Status               | ✅     |                             |        |                                   |        |
+| Block/Unblock User        | ✅     |                             |        |                                   |        |
+| Update Profile Picture    | ✅     |                             |        |                                   |        |
+| Create Group              | ✅     |                             |        |                                   |        |
+| Leave Group               | ✅     |                             |        |                                   |        |
+| All Groups                | ✅     |                             |        |                                   |        |
+| Invite User               | ✅     |                             |        |                                   |        |
+| Make Admin                | ✅     |                             |        |                                   |        |
+| Demote Admin              | ✅     |                             |        |                                   |        |
+| Group Invite Code         | ✅     |                             |        |                                   |        |
+| Update Group Participants | ✅     |                             |        |                                   |        |
+| Update Group Setting      | ✅     |                             |        |                                   |        |
+| Update Group Subject      | ✅     |                             |        |                                   |        |
+| Update Group Description  | ✅     |                             |        |                                   |        |
 
 3. Handle multiple client sessions (session data saved locally), identified by unique id
 
@@ -150,7 +160,7 @@ By setting the `DISABLED_CALLBACKS` environment variable you can specify what ev
 
 ### Scanning QR code
 
-In order to validate a new WhatsApp Web instance you need to scan the QR code using your mobile phone. Official documentation can be found at (https://faq.whatsapp.com/1079327266110265/?cms_platform=android) page. The service itself delivers the QR code content as a webhook event or you can use the REST endpoints (`/session/qr/:sessionId` or `/session/qr/:sessionId/image` to get the QR code as a png image). 
+In order to validate a new WhatsApp Web instance you need to scan the QR code using your mobile phone. Official documentation can be found at (https://faq.whatsapp.com/1079327266110265/?cms_platform=android) page. The service itself delivers the QR code content as a webhook event or you can use the REST endpoints (`/session/qr/:sessionId` or `/session/qr/:sessionId/image` to get the QR code as a png image).
 
 ## Deploy to Production
 
