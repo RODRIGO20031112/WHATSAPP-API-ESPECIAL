@@ -1,0 +1,47 @@
+version: "3.8"
+
+services:
+  api_zdg:
+    image: chrishubert/whatsapp-web-api:latest
+    networks:
+      - thewalkingoak
+    volumes:
+      - api_zdg_sessions:/usr/src/app/sessions
+    environment:
+      - API_KEY=thewalkingoak # OPTIONAL
+      - BASE_WEBHOOK_URL=https://api2024.thewalkingoak.com.br/localCallbackExample
+      - ENABLE_LOCAL_CALLBACK_EXAMPLE=TRUE # OPTIONAL, NOT RECOMMENDED FOR PRODUCTION
+      - MAX_ATTACHMENT_SIZE=5000000 # IN BYTES
+      - SET_MESSAGES_AS_SEEN=TRUE # WILL MARK THE MESSAGES AS READ AUTOMATICALLY
+      # ALL CALLBACKS: auth_failure|authenticated|call|change_state|disconnected|group_join|group_leave|group_update|loading_screen|media_uploaded|message|message_ack|message_create|message_reaction|message_revoke_everyone|qr|ready|contact_changed
+      - DISABLED_CALLBACKS=message_ack # PREVENT SENDING CERTAIN TYPES OF CALLBACKS BACK TO THE WEBHOOK
+      - ENABLE_SWAGGER_ENDPOINT=TRUE # OPTIONAL, ENABLES THE /api-docs ENDPOINT
+    deploy:
+      mode: replicated
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+      resources:
+        limits:
+          cpus: "1"
+          memory: 2048M
+      labels:
+        - traefik.enable=true
+        - traefik.http.routers.api_zdg.rule=Host(`api2024.thewalkingoak.com.br`)
+        - traefik.http.routers.api_zdg.entrypoints=websecure
+        - traefik.http.routers.api_zdg.tls.certresolver=letsencryptresolver
+        - traefik.http.routers.api_zdg.priority=1
+        - traefik.http.routers.api_zdg.service=api_zdg
+        - traefik.http.services.api_zdg.loadbalancer.server.port=3000
+        - traefik.http.services.api_zdg.loadbalancer.passHostHeader=true
+
+volumes:
+  api_zdg_sessions:
+    external: true
+    name: api_zdg_sessions
+
+networks:
+  thewalkingoak:
+    name: thewalkingoak
+    external: true

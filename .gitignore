@@ -1,0 +1,20 @@
+# Ignore node_modules
+node_modules
+
+# Ignore dotenv files
+.env
+
+# Ignore sessions
+sessions
+sessions_test
+.wwebjs_cache
+
+# Ignore logs
+logs
+
+# Ignore test coverage reports
+coverage
+
+# Ignore other unnecessary files
+.DS_Store
+.vscode
