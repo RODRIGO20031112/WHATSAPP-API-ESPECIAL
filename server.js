@@ -16,8 +16,11 @@ if (!baseWebhookURL) {
 app.listen(port, () => {
   (async () => {
     const chalk = await import("chalk");
-
+    console.log("");
     console.log(chalk.default.bgCyan(`Server running on port ${port}`));
     console.log(chalk.default.green(`Docs http://localhost:${port}/api-docs`));
+
+    // const open = await (await import("open")).default;
+    // open(`http://localhost:${port}/api-docs`);
   })();
 });
