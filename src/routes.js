@@ -526,11 +526,15 @@ especialRouter.get(
   [middleware.sessionNameValidation, middleware.sessionValidation],
   especialController.getGroupTypes
 );
-
 especialRouter.post(
   "/getGroups/:sessionId",
   [middleware.sessionNameValidation, middleware.sessionValidation],
   especialController.getGroups
+);
+especialRouter.post(
+  "/sendMessageEveryoneGroup/:sessionId",
+  [middleware.sessionNameValidation, middleware.sessionValidation],
+  especialController.sendMessageEveryoneGroup
 );
 
 /**

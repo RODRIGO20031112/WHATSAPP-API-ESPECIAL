@@ -140,11 +140,84 @@ const printWhatsAppGroupUrl = async (lastSegment) => {
   }
 };
 
-// const sendErrorResponse = (res, status, message) => {
-//   res.status(status).json({ success: false, message });
-// };
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+/**
+ * Send a message to everyone in a group
+ *
+ * @async
+ * @function
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ * @returns {Promise<Object>} Returns a JSON object with success flag and outcome of leaving the chat
+ * @throws {Error} If chat is not a group
+ */
+const sendMessageEveryoneGroup = async (req, res) => {
+  try {
+    const PORT = process.env.PORT || 3000;
+    const HOST = process.env.HOST || "localhost";
+    const { groupLink, sendMessageTypeBody } = req.body;
+    const headers = {
+      Accept: "*/*",
+      "x-api-key": process.env.API_KEY,
+      "Content-Type": "application/json",
+    };
+
+    const serverUrlJoinGroup = `http://${HOST}:${PORT}/groupChat/join/thewalkingoak`;
+    const { data: chatIdResponse } = await axios.post(
+      serverUrlJoinGroup,
+      { groupLink },
+      { headers }
+    );
+
+    let stop = 0;
+    const getParticipants = async () => {
+      await sleep(1000);
+      const chatId = chatIdResponse.chat;
+      const serverUrlGetClassInfo = `http://${HOST}:${PORT}/groupChat/getClassInfo/thewalkingoak`;
+      const { data: groupDataResponse } = await axios.post(
+        serverUrlGetClassInfo,
+        { chatId },
+        { headers }
+      );
+      const participants = groupDataResponse.chat.groupMetadata.participants;
+
+      if (stop < 5 && participants.length <= 1) {
+        stop++;
+        return await getParticipants();
+      } else {
+        return participants;
+      }
+    };
+
+    const participants = await getParticipants();
+    const serverUrlSendMessage = `http://${HOST}:${PORT}/client/sendMessage/thewalkingoak`;
+
+    for (const participant of participants) {
+      const participantId = participant.id._serialized;
+
+      sendMessageTypeBody.chatId = participantId;
+
+      try {
+        await axios.post(serverUrlSendMessage, sendMessageTypeBody, {
+          headers,
+        });
+      } catch (sendMessageError) {
+        console.error(
+          `Failed to send message to ${participantId}:`,
+          sendMessageError.message
+        );
+      }
+    }
+    res.json({ success: true, message: "All messages send with success" });
+  } catch (error) {
+    console.error("An error occurred:", error.message);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
 
 module.exports = {
   getGroupTypes,
   getGroups,
+  sendMessageEveryoneGroup,
 };
