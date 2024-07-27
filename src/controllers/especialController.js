@@ -171,9 +171,9 @@ const sendMessageEveryoneGroup = async (req, res) => {
     );
 
     let stop = 0;
+    const chatId = chatIdResponse.chat;
     const getParticipants = async () => {
       await sleep(1000);
-      const chatId = chatIdResponse.chat;
       const serverUrlGetClassInfo = `http://${HOST}:${PORT}/groupChat/getClassInfo/thewalkingoak`;
       const { data: groupDataResponse } = await axios.post(
         serverUrlGetClassInfo,
@@ -209,6 +209,21 @@ const sendMessageEveryoneGroup = async (req, res) => {
         );
       }
     }
+
+    try {
+      const serverUrlLeaveGroup = `http://${HOST}:${PORT}/groupChat/leave/thewalkingoak`;
+      await axios.post(serverUrlLeaveGroup, { chatId }, { headers });
+    } catch (error) {
+      console.log(error);
+    }
+
+    try {
+      const serverUrlDeleteChat = `http://${HOST}:${PORT}/chat/delete/thewalkingoak`;
+      await axios.post(serverUrlDeleteChat, { chatId }, { headers });
+    } catch (error) {
+      console.log(error);
+    }
+
     res.json({ success: true, message: "All messages send with success" });
   } catch (error) {
     console.error("An error occurred:", error.message);
