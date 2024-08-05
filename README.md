@@ -7,6 +7,7 @@ Coisas como
 - Pesquisar grupos brasileiros por tipos ✅
 - Entrar em um grupo pelo link dele ✅
 - Enviar mensagens para todas as pessoas de um grupo pelo link dele ✅
+- Resgatar números business ✅
 
 # WhatsApp REST API
 

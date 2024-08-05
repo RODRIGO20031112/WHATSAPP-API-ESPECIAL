@@ -231,8 +231,73 @@ const sendMessageEveryoneGroup = async (req, res) => {
   }
 };
 
+const extractAndCleanCellphoneNumbers = (htmlContent) => {
+  const phonePattern = /\b(?:\(?\d{2}\)?\s?)?\d{5}[-.\s]?\d{4}\b/g;
+  const matches = htmlContent.match(phonePattern);
+
+  if (!matches) return [];
+
+  const cleanedNumbers = new Set();
+  matches.forEach((match) => {
+    const cleanedNumber = match.replace(/\D/g, "");
+    if (cleanedNumber.length === 11) {
+      cleanedNumbers.add(cleanedNumber);
+    }
+  });
+
+  return Array.from(cleanedNumbers).sort();
+};
+
+/**
+ * Scrape cellphone business numbers from Google Maps
+ *
+ * @async
+ * @function
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ * @returns {Promise<Object>} Returns a JSON object with success flag and the list of phone numbers
+ * @throws {Error} If there's an error during the scraping process
+ */
+const scrapeCellphoneBusinessNumbersFromGoogleMaps = async (req, res) => {
+  try {
+    const { keywords } = req.body;
+
+    if (!Array.isArray(keywords) || keywords.length === 0) {
+      return res
+        .status(400)
+        .json({ success: false, message: "No keywords provided" });
+    }
+
+    const allNumbers = new Set();
+
+    for (const keyword of keywords) {
+      const mainUrl = `https://www.google.com.br/maps/search/${encodeURIComponent(
+        keyword
+      )}/@-23.6824124,-46.5952992,10z/data=!3m1!4b1?entry=ttu`;
+
+      try {
+        const response = await axios.get(mainUrl);
+        const $ = cheerio.load(response.data);
+        const htmlContent = $.html();
+        const cellphoneNumbers = extractAndCleanCellphoneNumbers(htmlContent);
+
+        cellphoneNumbers.forEach((number) => allNumbers.add(number));
+      } catch (error) {
+        console.error(`Failed to fetch URL ${mainUrl}:`, error.message);
+        // Continue processing other keywords even if one fails
+      }
+    }
+
+    res.json({ success: true, numbers: Array.from(allNumbers) });
+  } catch (error) {
+    console.error("An error occurred:", error.message);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
 module.exports = {
   getGroupTypes,
   getGroups,
   sendMessageEveryoneGroup,
+  scrapeCellphoneBusinessNumbersFromGoogleMaps,
 };

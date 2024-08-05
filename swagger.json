@@ -7318,6 +7318,95 @@
           }
         }
       }
+    },
+    "/especial/getBusinessCellphones/{sessionId}": {
+      "post": {
+        "tags": ["Especial"],
+        "description": "",
+        "parameters": [
+          {
+            "name": "sessionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Unique identifier for the session (alphanumeric and - allowed)",
+            "example": "thewalkingoak"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "403": {
+            "description": "Forbidden.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ForbiddenResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotFoundResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Entity.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "apiKeyAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "initialPage": {
+                    "type": "int",
+                    "description": "Home page that will be searched for scrapping"
+                  },
+                  "finalPage": {
+                    "type": "int",
+                    "description": "Final page that will be fetched for scraping"
+                  },
+                  "groupType": {
+                    "type": "string",
+                    "description": "The content of the message, can be a string or an object"
+                  }
+                }
+              },
+              "examples": {
+                "string": {
+                  "value": {
+                    "keywords": ["tecnologia", "celulares"]
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
