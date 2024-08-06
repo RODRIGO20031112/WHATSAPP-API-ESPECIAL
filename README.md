@@ -8,6 +8,7 @@ Coisas como
 - Entrar em um grupo pelo link dele ✅
 - Enviar mensagens para todas as pessoas de um grupo pelo link dele ✅
 - Resgatar números business ✅
+- Mandar mensagen para uma lista de usuários ✅
 
 # WhatsApp REST API
 

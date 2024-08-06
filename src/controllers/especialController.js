@@ -281,7 +281,7 @@ const scrapeCellphoneBusinessNumbersFromGoogleMaps = async (req, res) => {
         const htmlContent = $.html();
         const cellphoneNumbers = extractAndCleanCellphoneNumbers(htmlContent);
 
-        cellphoneNumbers.forEach((number) => allNumbers.add(number));
+        cellphoneNumbers.forEach((number) => allNumbers.add("55" + number));
       } catch (error) {
         console.error(`Failed to fetch URL ${mainUrl}:`, error.message);
         // Continue processing other keywords even if one fails
@@ -295,9 +295,62 @@ const scrapeCellphoneBusinessNumbersFromGoogleMaps = async (req, res) => {
   }
 };
 
+/**
+ * Send a bulk messages to everyone
+ *
+ * @async
+ * @function
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ * @returns {Promise<Object>} Returns a JSON object with success flag and the list of phone numbers
+ * @throws {Error} If there's an error during the scraping process
+ */
+const sendBulkMessages = async (req, res) => {
+  const PORT = process.env.PORT || 3000;
+  const HOST = process.env.HOST || "localhost";
+  const serverUrlSendMessage = `http://${HOST}:${PORT}/client/sendMessage/thewalkingoak`;
+
+  const headers = {
+    Accept: "*/*",
+    "x-api-key": process.env.API_KEY,
+    "Content-Type": "application/json",
+  };
+
+  try {
+    const { cellphoneNumbers, sendMessageTypeBody } = req.body;
+
+    if (!Array.isArray(cellphoneNumbers) || cellphoneNumbers.length === 0) {
+      return res
+        .status(400)
+        .json({ success: false, message: "No keywords provided" });
+    }
+
+    for (const cellphoneNumber of cellphoneNumbers) {
+      sendMessageTypeBody.chatId = cellphoneNumber + "@c.us";
+
+      try {
+        await axios.post(serverUrlSendMessage, sendMessageTypeBody, {
+          headers,
+        });
+      } catch (error) {
+        console.error(
+          `Failed to fetch URL ${serverUrlSendMessage}:`,
+          error.message
+        );
+      }
+    }
+
+    res.json({ success: true, message: "All messages sent with success!" });
+  } catch (error) {
+    console.error("An error occurred:", error.message);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
 module.exports = {
   getGroupTypes,
   getGroups,
   sendMessageEveryoneGroup,
   scrapeCellphoneBusinessNumbersFromGoogleMaps,
+  sendBulkMessages,
 };
