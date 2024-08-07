@@ -248,6 +248,12 @@ const extractAndCleanCellphoneNumbers = (htmlContent) => {
   return Array.from(cleanedNumbers).sort();
 };
 
+function isValidPhoneNumber(number) {
+  // Função para validar o número de celular no formato esperado (11 dígitos)
+  const phoneNumberPattern = /^\d{11}$/;
+  return phoneNumberPattern.test(number);
+}
+
 /**
  * Scrape cellphone business numbers from Google Maps
  *
@@ -268,7 +274,15 @@ const scrapeCellphoneBusinessNumbersFromGoogleMaps = async (req, res) => {
         .json({ success: false, message: "No keywords provided" });
     }
 
+    const headers = {
+      Accept: "*/*",
+      "x-api-key": process.env.API_KEY,
+      "Content-Type": "application/json",
+    };
+
     const allNumbers = new Set();
+
+    const url = "http://localhost:3000/client/isRegisteredUser/thewalkingoak";
 
     for (const keyword of keywords) {
       const mainUrl = `https://www.google.com.br/maps/search/${encodeURIComponent(
@@ -281,10 +295,27 @@ const scrapeCellphoneBusinessNumbersFromGoogleMaps = async (req, res) => {
         const htmlContent = $.html();
         const cellphoneNumbers = extractAndCleanCellphoneNumbers(htmlContent);
 
-        cellphoneNumbers.forEach((number) => allNumbers.add("55" + number));
+        for (const number of cellphoneNumbers) {
+          if (isValidPhoneNumber(number)) {
+            try {
+              const postResponse = await axios.post(
+                url,
+                { number },
+                { headers }
+              );
+
+              if (postResponse.data.result) {
+                allNumbers.add("55" + number);
+              }
+            } catch (error) {
+              if (error.message != "Request failed with status code 500") {
+                console.error(`Failed to fetch URL ${url}:`, error.message);
+              }
+            }
+          }
+        }
       } catch (error) {
-        console.error(`Failed to fetch URL ${mainUrl}:`, error.message);
-        // Continue processing other keywords even if one fails
+        console.error(`Failed to fetch mainURL ${mainUrl}:`, error.message);
       }
     }
 
