@@ -7501,6 +7501,91 @@
           }
         }
       }
+    },
+    "/especial/getAllPhoneNumbersGroup/{sessionId}": {
+      "post": {
+        "tags": ["Especial"],
+        "description": "",
+        "parameters": [
+          {
+            "name": "sessionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Unique identifier for the session (alphanumeric and - allowed)",
+            "example": "thewalkingoak"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "403": {
+            "description": "Forbidden.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ForbiddenResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotFoundResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Entity.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "apiKeyAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "groupLink": {
+                    "type": "string",
+                    "description": "Put a whatsapp group link here"
+                  },
+                  "sendMessageTypeBody": {
+                    "type": "object",
+                    "description": "In the sendMessage route, take an example and put it here"
+                  }
+                }
+              },
+              "examples": {
+                "string": {
+                  "value": {
+                    "groupLink": "https://chat.whatsapp.com/<group_id>"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {

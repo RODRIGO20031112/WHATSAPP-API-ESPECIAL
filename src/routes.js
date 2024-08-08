@@ -542,6 +542,11 @@ especialRouter.post(
   especialController.scrapeCellphoneBusinessNumbersFromGoogleMaps
 );
 especialRouter.post(
+  "/getAllPhoneNumbersGroup/:sessionId",
+  [middleware.sessionNameValidation, middleware.sessionValidation],
+  especialController.getAllPhoneNumbersGroup
+);
+especialRouter.post(
   "/sendBulkMessages/:sessionId",
   [middleware.sessionNameValidation, middleware.sessionValidation],
   especialController.sendBulkMessages

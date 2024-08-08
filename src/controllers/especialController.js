@@ -327,6 +327,69 @@ const scrapeCellphoneBusinessNumbersFromGoogleMaps = async (req, res) => {
 };
 
 /**
+ * Get all phone numbers in group
+ *
+ * @async
+ * @function
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ * @returns {Promise<Object>} Returns a JSON object with success flag and outcome of leaving the chat
+ * @throws {Error} If chat is not a group
+ */
+const getAllPhoneNumbersGroup = async (req, res) => {
+  try {
+    const PORT = process.env.PORT || 3000;
+    const HOST = process.env.HOST || "localhost";
+    const { groupLink } = req.body;
+    const headers = {
+      Accept: "*/*",
+      "x-api-key": process.env.API_KEY,
+      "Content-Type": "application/json",
+    };
+
+    const serverUrlJoinGroup = `http://${HOST}:${PORT}/groupChat/join/thewalkingoak`;
+    const { data: chatIdResponse } = await axios.post(
+      serverUrlJoinGroup,
+      { groupLink },
+      { headers }
+    );
+
+    let stop = 0;
+    const chatId = chatIdResponse.chat;
+    const getParticipants = async () => {
+      await sleep(1000);
+      const serverUrlGetClassInfo = `http://${HOST}:${PORT}/groupChat/getClassInfo/thewalkingoak`;
+      const { data: groupDataResponse } = await axios.post(
+        serverUrlGetClassInfo,
+        { chatId },
+        { headers }
+      );
+      const participants = groupDataResponse.chat.groupMetadata.participants;
+
+      if (stop < 5 && participants.length <= 1) {
+        stop++;
+        return await getParticipants();
+      } else {
+        return participants;
+      }
+    };
+
+    const participants = await getParticipants();
+
+    const allNumbers = new Set();
+
+    for (const participant of participants) {
+      allNumbers.add(participant.id.user);
+    }
+
+    res.json({ success: true, numbers: Array.from(allNumbers) });
+  } catch (error) {
+    console.error("An error occurred:", error.message);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+/**
  * Send a bulk messages to everyone
  *
  * @async
@@ -383,5 +446,6 @@ module.exports = {
   getGroups,
   sendMessageEveryoneGroup,
   scrapeCellphoneBusinessNumbersFromGoogleMaps,
+  getAllPhoneNumbersGroup,
   sendBulkMessages,
 };
