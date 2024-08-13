@@ -1,6 +1,7 @@
 const { sendErrorResponse } = require("../utils");
 const axios = require("axios");
 const cheerio = require("cheerio");
+const { sessions } = require("../sessions");
 
 /**
  * Especial a group chat
@@ -163,7 +164,9 @@ const sendMessageEveryoneGroup = async (req, res) => {
       "Content-Type": "application/json",
     };
 
-    const serverUrlJoinGroup = `http://${HOST}:${PORT}/groupChat/join/thewalkingoak`;
+    const sessionId = req.params.sessionId;
+
+    const serverUrlJoinGroup = `http://${HOST}:${PORT}/groupChat/join/${sessionId}`;
     const { data: chatIdResponse } = await axios.post(
       serverUrlJoinGroup,
       { groupLink },
@@ -174,7 +177,7 @@ const sendMessageEveryoneGroup = async (req, res) => {
     const chatId = chatIdResponse.chat;
     const getParticipants = async () => {
       await sleep(1000);
-      const serverUrlGetClassInfo = `http://${HOST}:${PORT}/groupChat/getClassInfo/thewalkingoak`;
+      const serverUrlGetClassInfo = `http://${HOST}:${PORT}/groupChat/getClassInfo/${sessionId}`;
       const { data: groupDataResponse } = await axios.post(
         serverUrlGetClassInfo,
         { chatId },
@@ -191,7 +194,7 @@ const sendMessageEveryoneGroup = async (req, res) => {
     };
 
     const participants = await getParticipants();
-    const serverUrlSendMessage = `http://${HOST}:${PORT}/client/sendMessage/thewalkingoak`;
+    const serverUrlSendMessage = `http://${HOST}:${PORT}/client/sendMessage/${sessionId}`;
 
     for (const participant of participants) {
       const participantId = participant.id._serialized;
@@ -211,14 +214,14 @@ const sendMessageEveryoneGroup = async (req, res) => {
     }
 
     try {
-      const serverUrlLeaveGroup = `http://${HOST}:${PORT}/groupChat/leave/thewalkingoak`;
+      const serverUrlLeaveGroup = `http://${HOST}:${PORT}/groupChat/leave/${sessionId}`;
       await axios.post(serverUrlLeaveGroup, { chatId }, { headers });
     } catch (error) {
       console.log(error);
     }
 
     try {
-      const serverUrlDeleteChat = `http://${HOST}:${PORT}/chat/delete/thewalkingoak`;
+      const serverUrlDeleteChat = `http://${HOST}:${PORT}/chat/delete/${sessionId}`;
       await axios.post(serverUrlDeleteChat, { chatId }, { headers });
     } catch (error) {
       console.log(error);
@@ -280,9 +283,14 @@ const scrapeCellphoneBusinessNumbersFromGoogleMaps = async (req, res) => {
       "Content-Type": "application/json",
     };
 
+    const PORT = process.env.PORT || 3000;
+    const HOST = process.env.HOST || "localhost";
+
+    const sessionId = req.params.sessionId;
+
     const allNumbers = new Set();
 
-    const url = "http://localhost:3000/client/isRegisteredUser/thewalkingoak";
+    const url = `http://${HOST}:${PORT}/client/isRegisteredUser/${sessionId}`;
 
     for (const keyword of keywords) {
       const mainUrl = `https://www.google.com.br/maps/search/${encodeURIComponent(
@@ -346,8 +354,9 @@ const getAllPhoneNumbersGroup = async (req, res) => {
       "x-api-key": process.env.API_KEY,
       "Content-Type": "application/json",
     };
+    const sessionId = req.params.sessionId;
 
-    const serverUrlJoinGroup = `http://${HOST}:${PORT}/groupChat/join/thewalkingoak`;
+    const serverUrlJoinGroup = `http://${HOST}:${PORT}/groupChat/join/${sessionId}`;
     const { data: chatIdResponse } = await axios.post(
       serverUrlJoinGroup,
       { groupLink },
@@ -358,7 +367,7 @@ const getAllPhoneNumbersGroup = async (req, res) => {
     const chatId = chatIdResponse.chat;
     const getParticipants = async () => {
       await sleep(1000);
-      const serverUrlGetClassInfo = `http://${HOST}:${PORT}/groupChat/getClassInfo/thewalkingoak`;
+      const serverUrlGetClassInfo = `http://${HOST}:${PORT}/groupChat/getClassInfo/${sessionId}`;
       const { data: groupDataResponse } = await axios.post(
         serverUrlGetClassInfo,
         { chatId },
@@ -402,7 +411,9 @@ const getAllPhoneNumbersGroup = async (req, res) => {
 const sendBulkMessages = async (req, res) => {
   const PORT = process.env.PORT || 3000;
   const HOST = process.env.HOST || "localhost";
-  const serverUrlSendMessage = `http://${HOST}:${PORT}/client/sendMessage/thewalkingoak`;
+  const sessionId = req.params.sessionId;
+
+  const serverUrlSendMessage = `http://${HOST}:${PORT}/client/sendMessage/${sessionId}`;
 
   const headers = {
     Accept: "*/*",
