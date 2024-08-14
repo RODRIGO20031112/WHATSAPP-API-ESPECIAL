@@ -391,6 +391,13 @@ const getAllPhoneNumbersGroup = async (req, res) => {
       allNumbers.add(participant.id.user);
     }
 
+    try {
+      const serverUrlLeaveGroup = `http://${HOST}:${PORT}/groupChat/leave/${sessionId}`;
+      await axios.post(serverUrlLeaveGroup, { chatId }, { headers });
+    } catch (error) {
+      console.log(error);
+    }
+
     res.json({ success: true, numbers: Array.from(allNumbers) });
   } catch (error) {
     console.error("An error occurred:", error.message);
