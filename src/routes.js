@@ -551,6 +551,11 @@ especialRouter.post(
   [middleware.sessionNameValidation, middleware.sessionValidation],
   especialController.sendBulkMessages
 );
+especialRouter.post(
+  "/getNumbersToType/:sessionId",
+  [middleware.sessionNameValidation, middleware.sessionValidation],
+  especialController.getNumbersToType
+);
 
 /**
  * ================

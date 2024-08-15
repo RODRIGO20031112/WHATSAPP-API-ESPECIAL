@@ -51,8 +51,9 @@ const getGroups = async (req, res) => {
   try {
     const { initialPage, finalPage, groupType } = req.body;
     const groups = [];
-    let statusCounter = 1;
+    let statusCounter = 1 + initialPage;
     let globalCounter = 1;
+    console.log(globalCounter);
 
     for (let i = parseInt(initialPage); i <= parseInt(finalPage); i++) {
       try {
@@ -134,7 +135,10 @@ const printWhatsAppGroupUrl = async (lastSegment) => {
       "body > section:nth-of-type(2) > div > div > div:nth-of-type(2) > div > div > h5"
     ).text();
 
-    return `Whatsapp group: ${urlWhatsapp}, Group name: ${h5Text}`;
+    return {
+      link: urlWhatsapp,
+      name: h5Text,
+    };
   } catch (error) {
     console.log(`Erro ao extrair dados: ${error.message}`);
     return null;
@@ -401,7 +405,9 @@ const getAllPhoneNumbersGroup = async (req, res) => {
     res.json({ success: true, numbers: Array.from(allNumbers) });
   } catch (error) {
     console.error("An error occurred:", error.message);
-    res.status(500).json({ success: false, message: error.message });
+    res
+      .status(500)
+      .json({ success: false, message: error.message, especialCode: "pass" });
   }
 };
 
@@ -459,6 +465,84 @@ const sendBulkMessages = async (req, res) => {
   }
 };
 
+/**
+ * Send a bulk messages to everyone
+ *
+ * @async
+ * @function
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ * @returns {Promise<Object>} Returns a JSON object with success flag and the list of phone numbers
+ * @throws {Error} If there's an error during the scraping process
+ */
+const getNumbersToType = async (req, res) => {
+  const PORT = process.env.PORT || 3000;
+  const HOST = process.env.HOST || "localhost";
+  const sessionId = req.params.sessionId;
+  const { initialPage, finalPage, groupType } = req.body;
+
+  const getGroupsURL = `http://${HOST}:${PORT}/especial/getGroups/${sessionId}`;
+  const getGroupNumbersURL = `http://${HOST}:${PORT}/especial/getAllPhoneNumbersGroup/${sessionId}`;
+
+  const headers = {
+    Accept: "*/*",
+    "x-api-key": process.env.API_KEY,
+    "Content-Type": "application/json",
+  };
+
+  const allNumbers = new Set();
+
+  try {
+    const groupsList = await axios.post(
+      getGroupsURL,
+      { initialPage, finalPage, groupType },
+      {
+        headers,
+      }
+    );
+
+    const groups = groupsList.data.groups;
+
+    for (let i = 0; i < groups.length; i++) {
+      const groupLink = groups[i].link;
+
+      try {
+        const numbersList = await axios.post(
+          getGroupNumbersURL,
+          { groupLink },
+          {
+            headers,
+          }
+        );
+
+        const numbers = numbersList.data.numbers;
+
+        for (let j = 0; j < numbers.length; j++) {
+          console.log(numbers[j]);
+          allNumbers.add(numbers[j]);
+        }
+      } catch (error) {
+        console.log(
+          `Erro ao obter números do grupo ${groupLink}:`,
+          error.response?.data?.especialCode || error.message
+        );
+      }
+    }
+
+    res.json({ success: true, numbers: Array.from(allNumbers) });
+  } catch (error) {
+    console.log(
+      "Erro ao obter a lista de grupos:",
+      error.response?.data?.especialCode || error.message
+    );
+    res.status(500).json({
+      success: false,
+      message: "Erro ao processar a requisição.",
+      numbersAfterBan: Array.from(allNumbers),
+    });
+  }
+};
+
 module.exports = {
   getGroupTypes,
   getGroups,
@@ -466,4 +550,5 @@ module.exports = {
   scrapeCellphoneBusinessNumbersFromGoogleMaps,
   getAllPhoneNumbersGroup,
   sendBulkMessages,
+  getNumbersToType,
 };
