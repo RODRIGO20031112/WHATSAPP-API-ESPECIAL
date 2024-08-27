@@ -1,7 +1,13 @@
 const { sendErrorResponse } = require("../utils");
 const axios = require("axios");
 const cheerio = require("cheerio");
-const { sessions } = require("../sessions");
+const fs = require("fs");
+const path = require("path");
+const crypto = require("crypto");
+
+const gerarNomeAleatorio = (tamanho = 10) => {
+  return crypto.randomBytes(tamanho).toString("hex").slice(0, tamanho);
+};
 
 /**
  * Especial a group chat
@@ -53,7 +59,6 @@ const getGroups = async (req, res) => {
     const groups = [];
     let statusCounter = 1 + initialPage;
     let globalCounter = 1;
-    console.log(globalCounter);
 
     for (let i = parseInt(initialPage); i <= parseInt(finalPage); i++) {
       try {
@@ -503,6 +508,11 @@ const getNumbersToType = async (req, res) => {
 
     const groups = groupsList.data.groups;
 
+    const nomeAleatorio = gerarNomeAleatorio();
+    const currentDir = __dirname;
+    const fileName = `../../csvs/${nomeAleatorio}.csv`;
+    const filePath = path.join(currentDir, fileName);
+
     for (let i = 0; i < groups.length; i++) {
       const groupLink = groups[i].link;
 
@@ -518,8 +528,12 @@ const getNumbersToType = async (req, res) => {
         const numbers = numbersList.data.numbers;
 
         for (let j = 0; j < numbers.length; j++) {
-          console.log(numbers[j]);
           allNumbers.add(numbers[j]);
+
+          fs.appendFile(filePath, numbers[j] + "\n", (err) => {
+            if (err) throw err;
+            console.log("Número adicionado ao arquivo cell_numbers.txt");
+          });
         }
       } catch (error) {
         console.log(
