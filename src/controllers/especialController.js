@@ -22,24 +22,34 @@ const gerarNomeAleatorio = (tamanho = 10) => {
 const getGroupTypes = async (req, res) => {
   try {
     const url = "https://gruposwhats.app/";
-    const { data: html } = await axios.get(url);
+    const { data: html } = await axios.get(url, {
+      headers: {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"
+      }
+    });
+
     const $ = cheerio.load(html);
 
-    const anchorNodes = $(
-      "body > section:nth-of-type(1) > div > div:nth-of-type(1)"
-    ).find("a");
-    const options = anchorNodes
-      .map((_, anchor) => {
-        const href = $(anchor).attr("href");
-        if (href) {
-          return href.split("/").pop();
-        }
-      })
-      .get();
+    // Agora com o seletor certo
+    const anchorNodes = $("section.categories.bg-white div.col-category a.category");
 
-    res.json({ success: true, options: options });
+    const options = anchorNodes.map((_, anchor) => {
+      const href = $(anchor).attr("href");
+      const name = $(anchor).find(".category-name").text().trim();
+
+      if (href && name) {
+        return {
+          name,
+          slug: href.split("/").pop(),
+          url: href
+        };
+      }
+    }).get();
+
+    res.json({ success: true, count: options.length, options });
   } catch (error) {
-    sendErrorResponse(res, 500, error.message);
+    console.error("Erro ao buscar categorias:", error.message);
+    res.status(500).json({ success: false, error: error.message });
   }
 };
 
@@ -57,96 +67,67 @@ const getGroups = async (req, res) => {
   try {
     const { initialPage, finalPage, groupType } = req.body;
     const groups = [];
-    let statusCounter = 1 + initialPage;
-    let globalCounter = 1;
 
     for (let i = parseInt(initialPage); i <= parseInt(finalPage); i++) {
-      try {
-        const urlEscolhida = `https://gruposwhats.app/category/${groupType}?page=${statusCounter}`;
-        const { data: htmlFiltrado } = await axios.get(urlEscolhida);
-        const $filtered = cheerio.load(htmlFiltrado);
+      const url = `https://gruposwhats.app/category/${groupType}?page=${i}`;
+      console.log("📄 Buscando página:", url);
 
-        const divNodeFiltrado = $filtered(
-          "body > section:nth-of-type(2) > div > div"
-        );
-        const anchorNodesFiltrados = divNodeFiltrado.find("a");
+      const { data: html } = await axios.get(url, {
+        headers: { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)" }
+      });
+      const $ = cheerio.load(html);
 
-        if (anchorNodesFiltrados.length) {
-          let counterII = globalCounter;
+      // Pega cada card de grupo
+      const cards = $("section.section-groups .col-group .card.group");
 
-          for (const anchor of anchorNodesFiltrados.toArray()) {
-            const href = $filtered(anchor).attr("href");
-            if (href) {
-              const parts = href.split("/");
-              const lastSegment = parts.pop();
-              const group = await printWhatsAppGroupUrl(lastSegment);
-              if (group) {
-                groups.push(group);
-              }
-              counterII++;
-            }
-          }
+      for (const card of cards.toArray()) {
+        const name = $(card).find(".card-title").text().trim();
+        const description = $(card).find(".card-text").text().trim();
+        const image = $(card).find(".card-img-top").attr("src");
+        const category = $(card).find(".card-category").text().trim();
+        const groupPageUrl = $(card).find("a.btn-success").attr("href");
 
-          globalCounter = counterII;
+        if (!groupPageUrl) continue;
 
-          const nextPageNode = $filtered(
-            'a:contains("Próxima"), a:contains("Next")'
-          );
-          if (nextPageNode.length !== 0) {
-            statusCounter++;
-          }
-        } else {
-          console.log("Nenhuma tag <a> encontrada na página filtrada.");
+        try {
+          // Abre a página do grupo para extrair o link real do WhatsApp
+          const { data: groupHtml } = await axios.get(groupPageUrl, {
+            headers: { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)" }
+          });
+          const $$ = cheerio.load(groupHtml);
+
+          // Seleciona o botão “Entrar no Grupo”
+          const joinButton = $$("#entrar > div > div > a.btn-success");
+
+          const whatsappUrl = joinButton.attr("data-url");
+          const joinHref = joinButton.attr("href");
+          const groupId = joinButton.attr("data-id");
+
+          groups.push({
+            id: groupId || null,
+            name,
+            category,
+            description,
+            image,
+            page: groupPageUrl,
+            joinPage: joinHref,
+            whatsappUrl
+          });
+
+          console.log(`✅ ${name} → ${whatsappUrl}`);
+        } catch (err) {
+          console.warn(`Erro ao abrir grupo ${groupPageUrl}:`, err.message);
         }
-      } catch (error) {
-        console.log(`Erro: ${error.message}`);
+
+        // Pequeno delay entre requests (evita bloqueio)
+        await new Promise((r) => setTimeout(r, 500));
       }
     }
 
-    res.json({ success: true, groups });
+    res.json({ success: true, count: groups.length, groups });
   } catch (error) {
-    sendErrorResponse(res, 500, error.message);
-  }
-};
-
-const printWhatsAppGroupUrl = async (lastSegment) => {
-  const urlFiltradaWhatsapp = `https://gruposwhats.app/group/${lastSegment}`;
-  let htmlWhatsapp = null;
-
-  for (let i = 0; i < 5; i++) {
-    try {
-      const { data } = await axios.get(urlFiltradaWhatsapp);
-      htmlWhatsapp = data;
-      if (htmlWhatsapp) break;
-    } catch (error) {
-      console.log(`Erro ao buscar a página: ${error.message}`);
-    }
-
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-  }
-
-  if (!htmlWhatsapp) {
-    console.log("Não foi possível obter o conteúdo da página.");
-    return null;
-  }
-
-  const $ = cheerio.load(htmlWhatsapp);
-
-  try {
-    const urlWhatsapp = $(
-      "body > section:nth-of-type(2) > div > div > div:nth-of-type(2) > div > div > a"
-    ).attr("data-url");
-    const h5Text = $(
-      "body > section:nth-of-type(2) > div > div > div:nth-of-type(2) > div > div > h5"
-    ).text();
-
-    return {
-      link: urlWhatsapp,
-      name: h5Text,
-    };
-  } catch (error) {
-    console.log(`Erro ao extrair dados: ${error.message}`);
-    return null;
+    console.error("❌ Erro geral:", error.message);
+    res.status(500).json({ success: false, error: error.message });
   }
 };
 
